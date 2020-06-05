@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div ref="editor"></div>
+    <div ref="editor" />
   </div>
 </template>
 
@@ -11,14 +11,12 @@ export default {
   },
   data () {
     return {
-      editor:null
+      editor: null
     }
   },
-  mounted(){
-    var _editor = this.$refs.editor
+  mounted () {
+    const _editor = this.$refs.editor
     this.editor = this.$NewEditor(_editor)
-
   }
 }
 </script>
-

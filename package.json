@@ -4,7 +4,7 @@
   "description": "An electron-nuxt project",
   "main": "./dist/main/index.js",
   "scripts": {
-    "dev": "node .electron-nuxt/dev.js",
+    "dev": "node .electron-nuxt/dev.js --inspect",
     "build": "node .electron-nuxt/build.js",
     "test:unit": "cross-env NODE_ENV=test TEST_TYPE=unit ava",
     "test:e2e": "cross-env NODE_ENV=test TEST_TYPE=e2e ava",

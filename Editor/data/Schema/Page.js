@@ -1,12 +1,12 @@
-let mongoose = require('mongoose');
-let Schema = mongoose.Schema
+const mongoose = require('mongoose')
+const Schema = mongoose.Schema
 
-//Schema
-let Page =  new Schema({
-  title:String,
+// Schema
+const Page = new Schema({
+  title: String,
   content: Schema.Types.Mixed,
-  references: Schema.Types.Mixed,
+  references: Schema.Types.Mixed
 })
 
-//Export
-module.exports = mongoose.model("Page", Page);
+// Export
+module.exports = mongoose.model('Page', Page)
