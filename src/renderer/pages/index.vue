@@ -1,22 +1,41 @@
 <template>
-  <div>
-    <div ref="editor" />
-  </div>
+  <el-container>
+    <el-header class ='cover'>
+      <img class='cover' style = 'width:inherit' src="../assets/cabin.jpg"/>
+
+    </el-header>
+    <el-main></el-main>
+  </el-container>
 </template>
 
 <script>
 export default {
-  components: {
-
-  },
+  name: 'Home',
   data () {
     return {
-      editor: null
+
     }
   },
-  mounted () {
-    const _editor = this.$refs.editor
-    this.editor = this.$NewEditor(_editor)
+  methods: {
+    handleSelect (key, keyPath) {
+      console.log(key, keyPath)
+    }
   }
 }
 </script>
+
+<style>
+  .cover{
+        object-fit: cover !important;
+    align-self: center;
+    width:100%;
+    background-color: black;
+    height: 270px !important;
+    padding:0px;
+  }
+  .menu{
+    display:block;
+
+  }
+
+</style>

@@ -12,8 +12,9 @@ module.exports = {
   loading: false,
   plugins: [
     { ssr: true, src: '@/plugins/icons.js' },
-    { ssr: true, src: "@/plugins/editor.js" },
-    { ssr: true, src: '@/plugins/element.js' }
+    { ssr: true, src: '@/plugins/editor.js' },
+    { ssr: true, src: '@/plugins/element.js' },
+    { ssr: true, src: '@/plugins/type_creator.js' }
   ],
   buildModules: [
     '@nuxt/typescript-build'

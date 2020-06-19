@@ -11,6 +11,14 @@ const { RENDERER_PROCESS_DIR, DIST_DIR, DISABLE_BABEL_LOADER } = require('../con
 const userNuxtConfig = require('../../src/renderer/nuxt.config')
 
 const baseConfig = {
+  head:{
+    link:[
+      { rel: 'stylesheet', href: 'https://prosemirror.net/css/editor.css'},
+      {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Sura&display=swap'},
+      {rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Roboto&display=swap'},
+    ]
+
+  },
   srcDir: RENDERER_PROCESS_DIR,
   rootDir: RENDERER_PROCESS_DIR,
   router: {
@@ -22,7 +30,8 @@ const baseConfig = {
   },
   plugins: [
     { ssr: true, src: path.join(__dirname, 'resources-plugin.js') }
-  ]
+  ],
+
 };
 
 const baseExtend = (config, { isClient }) => {
