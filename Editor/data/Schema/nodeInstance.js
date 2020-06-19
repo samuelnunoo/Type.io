@@ -1,13 +1,18 @@
+// Imports
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
+
+// Component and Validation
 const componentSchema = new Schema({}, { discriminatorKey: 'component', _id: false })
 function validation (obj, key) {
   const result = Object.prototype.hasOwnProperty.call(obj, key.toString())
   return result
 }
 
-const Types = new Schema({
+
+// Main Schema
+const NodeInstance = new Schema({
   doc: { type: Schema.Types.ObjectID, ref: 'Pages' },
   type: String,
   components: [componentSchema],
@@ -15,7 +20,7 @@ const Types = new Schema({
 })
 
 // Data Setter
-Types.virtual('data')
+NodeInstance.virtual('data')
   .set(function (data) {
     const content = data.content.content
     const components = this.components
@@ -24,7 +29,7 @@ Types.virtual('data')
     }
   })
 // Testing
-Types.statics.destroy = async function (_id) {
+NodeInstance.statics.destroy = async function (_id) {
   const Type = await mongoose.model('Types').findOne({ _id }).exec()
   const _list = Type.references
   const Pages = await mongoose.model('Pages').find({ _id: { $in: _list } }).exec()
@@ -47,7 +52,7 @@ Types.statics.destroy = async function (_id) {
 }
 
 // Array Path
-const docArray = Types.path('components')
+const docArray = NodeInstance.path('components')
 
 // Heading
 const heading = new Schema({
@@ -100,4 +105,4 @@ docArray.discriminator('heading', heading)
 docArray.discriminator('note', note)
 
 // Export
-module.exports = mongoose.model('Types', Types)
+module.exports = mongoose.model('NodeInstance', NodeInstance)

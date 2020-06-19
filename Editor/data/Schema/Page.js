@@ -1,8 +1,11 @@
+// Imports
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
+
+// Component Schema
 const componentSchema = new Schema({}, { discriminatorKey: 'component'})
 
-// Schema
+// Main Schema
 const Page = new Schema({
   title: String,
   content: [componentSchema],

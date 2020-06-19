@@ -1,13 +1,13 @@
+// Imports
 const { exampleSetup } = require('prosemirror-example-setup')
 const state = require('prosemirror-state')
 const Plugin = state.Plugin
-const PluginKey = state.PluginKey
 const { Decoration, DecorationSet } = require('prosemirror-view')
 const { keymap } = require('prosemirror-keymap')
-const model = require('../../../Editor/data/model')
 const nodeSpec = require('../../../Editor/data/Schema/nodeSpec')
 const TextSelection = state.TextSelection
 
+// Functions
 async function getNode (state) {
   const block = await nodeSpec.findOne({ name: 'Example123' }).exec()
   const schema = state.schema
@@ -58,6 +58,7 @@ async function newNote (state, dispatch) {
   dispatch(tr)
 }
 
+// Plugins
 const placeholder = new Plugin({
   props: {
 
@@ -122,4 +123,5 @@ function Plugins (schema) {
   ]
 }
 
+// Exports
 module.exports = Plugins

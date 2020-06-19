@@ -1,6 +1,5 @@
 // Imports
 const db = require('./database')
-
 const Schema = require('prosemirror-model').Schema
 const EditorView = require('prosemirror-view').EditorView
 const EditorState = require('prosemirror-state').EditorState
@@ -8,14 +7,13 @@ const state = require('prosemirror-state')
 const Plugin = state.Plugin
 const PluginKey = state.PluginKey
 const updateKey = new PluginKey('updatePlugin')
-const fs = require('fs')
 const mongoose = require('mongoose')
-const { Decoration, DecorationSet } = require('prosemirror-view')
 const CacheService = require('../data/cache')
+
 // Models
 const nodeSpec = require('./Schema/nodeSpec')
 const Page = require('./Schema/Page')
-const Types = require('./Schema/Types')
+const Types = require('./Schema/nodeInstance')
 
 // Cache Service
 const ttl = 0
@@ -133,62 +131,8 @@ function schemaJSON (nodes, content) {
     }
   }
 }
-function swapIndex (from, _to, array) {
-  const end = array[_to] === undefined ? array.length - 1 : _to;
-  [array[from], array[end]] = [array[end], array[from]]
-  return array
-}
-function updateByIndex (id, data, content, page) {
-  const node = data[id].node
-  const index = data[id].index
-  let contentID = content[index] === undefined ? false : content[index].id
-  const matchingIndex = contentID === false ? false : data[contentID].index
 
-  if (data[id].newNode === false) {
-    do { swapIndex(index, matchingIndex, content); contentID = content[index].id } while (contentID !== id)
-    if (content[index].component === 'reference') { updateTemplate(data[id], content[index]) } else { content[index].data = node }
-  } else {
-    // create new Node
-    const _isTemplate = isTemplate(node)
-    const component = _isTemplate ? { component: 'reference' } : { component: node.type.name }
-
-    // generate Template
-    if (_isTemplate) {
-      const objectID = new mongoose.Types.ObjectId().toString()
-      templateStuff(node, page, component, objectID, index)
-      return objectID
-    }
-
-    // generate Component
-    else {
-      addIndex(content, index, component)
-    }
-
-  }
-  return content[index].id
-}
 // Getters
-function dataUpdate (page, tr, data, deletions) {
-  const content = dataRemove(page, deletions)
-
-  for (const id of Object.keys(data)) {
-    if (page[id] !== undefined) {
-      page[id] = data[id].node.textContent
-    } else {
-      const getID = updateByIndex(id, data, content, page)
-      tr.setNodeMarkup(data[id].pos, null, { id: getID })
-    }
-  }
-
-  page.markModified('content')
-  page.save()
-  return tr
-}
-async function getCurrentPage (state) {
-  const docID = updateKey.get(state).spec.docID
-  const page = await getObject(Page, docID)
-  return page
-}
 function getEditorState (schema, plugins, json) {
   return EditorState.fromJSON({ schema, plugins }, json)
 }
@@ -206,7 +150,7 @@ async function getJSON (ID) {
 function getNodeSpec () {
   return nodeSpec
 }
-async function getObject (collection, id) {
+async function getDBObject (collection, id) {
   const promise = await collection.findOne({ _id: id }).exec()
   return promise
 }
@@ -214,16 +158,6 @@ async function getPage (ID) {
   const promise = await Page.find({ _id: ID }).exec()
   return promise
 }
-
-async function updateTemplate(content, pointer){
-  const _id = pointer.reference
-  const instance = await Types.findOne({ _id }).exec()
-  instance.data = content.node
-  instance.markModified('components')
-  instance.save()
-  console.log(content)
-}
-
 async function getTemplateID (type) {
   const promise = await nodeSpec.findOne({ name: type }, { _id: 1 }).exec()
   return promise.id
@@ -239,91 +173,21 @@ async function getTypes (content) {
 }
 
 // Update Functions
-const pageEvents = {
-  async title (node, state) {
-    const page = await getCurrentPage(state)
-    const text = node.textContent
-    page.title = text
-    page.save()
-  }
-}
-function getRemovalList (from, to, oldDoc) {
-  const _toRemove = []
-  oldDoc.forEach((node, offset, index) => {
-    const start = offset + 2
-    const condition = node.childCount + 1
-    const end = offset + node.nodeSize - condition
-    if (start >= from && end <= to) _toRemove.push(index - 1)
-  })
-  return _toRemove
-}
-async function removeNode (node, state, index) {
-  const page = await getCurrentPage(state)
-  const _isTemplate = isTemplate(node)
+function syncDB (page, tr, data, deletions) {
+  const content = removeFromDB(page, deletions)
 
-  if (!_isTemplate) page.content = removeIndex(page.content, index)
-  else await Types.destroy(page.content[index])
-}
-async function removeContent (selection, state, isTemplate) {
-  const page = await getCurrentPage(state)
-  let content = page.content
-  const from = selection.from
-  const to = selection.to
-  const oldDoc = state.doc
-  const removalList = getRemovalList(from, to, oldDoc)
-
-  for (const index of removalList) {
-    if (!isTemplate) content = removeIndex(content, index)
-    else await Types.destroy(content[index])
+  for (const id of Object.keys(data)) {
+    if (page[id] !== undefined) {
+      page[id] = data[id].node.textContent
+    } else {
+      const getID = updateByIndex(id, data, content, page)
+      tr.setNodeMarkup(data[id].pos, null, { id: getID })
+    }
   }
+
   page.markModified('content')
-  await createItem(page)
-}
-async function updateNode (node, state, pageIndex) {
-  const page = await getCurrentPage(state)
-  const _isTemplate = isTemplate(node)
-  const isPageItem = node.type.name === 'title'
-
-  if (isPageItem) {
-    const type = node.type.name
-    page[type] = node.textContent
-    return await page.save()
-  } else if (!_isTemplate) {
-    page.content[pageIndex].data = node
-    page.markModified('content')
-    return await page.save()
-  } else {
-    const typeID = getAtIndex(page.content, pageIndex)
-    const type = await getObject(Types, typeID)
-    for (const component of type.component) component.data = node
-    type.markModified('component')
-    await createItem(type)
-  }
-}
-async function updateContent (node, _pageIndex, nodeIndex, state, isTemplate) {
-  const page = await getCurrentPage(state)
-  const pageIndex = isTemplate ? _pageIndex - 1 : _pageIndex
-  const isPageItem = node.type.name === 'title'
-
-  if (isPageItem) {
-    const type = node.type.name
-    page[type] = node.textContent
-    await page.save()
-    return true
-  }
-
-  if (!isTemplate) {
-    page.content[pageIndex].data = node
-    page.markModified('content')
-    await page.save()
-    return true
-  }
-  const typeID = getAtIndex(page.content, pageIndex)
-  const type = await getObject(Types, typeID)
-  const component = getAtIndex(type.components, nodeIndex)
-  component.data = node
-  type.markModified('component')
-  await createItem(type)
+  page.save()
+  return tr
 }
 async function newPage (editor, plugins, objectID = null) {
   // Variables
@@ -365,7 +229,7 @@ async function newPage (editor, plugins, objectID = null) {
             return false
           })
         })
-        dataUpdate(PageModel, newTr, Content, Deletions)
+        syncDB(PageModel, newTr, Content, Deletions)
         console.log(newTr)
         return newTr
       }
@@ -376,7 +240,7 @@ async function newPage (editor, plugins, objectID = null) {
   const State = getEditorState(schema, Plugins, pageData)
   return newEditor(editor, State)
 }
-function dataRemove (page, deletions) {
+function removeFromDB (page, deletions) {
   let removalCount = 0
   deletions.forEach(index => {
     const loc = index - removalCount
@@ -386,7 +250,14 @@ function dataRemove (page, deletions) {
   })
   return page.content
 }
-
+async function updateTemplate (content, pointer){
+  const _id = pointer.reference
+  const instance = await Types.findOne({ _id }).exec()
+  instance.data = content.node
+  instance.markModified('components')
+  instance.save()
+  console.log(content)
+}
 function isTemplate (node) {
   const type = node.type.name
   return validation(templates, type)
@@ -396,108 +267,46 @@ function validation (obj, key) {
   return result
 }
 
-async function newNode (node, state, index) {
-  const page = await getCurrentPage(state)
-
-  if (!isTemplate) {
-    const _component = { component: node.type.name }
-    addIndex(page.content, index, _component)
-    page.markModified('content')
-    return await page.save()
-  }
-
-  const templateItem = await createTemplate(node.type.name)
-  const reference = { component: 'reference', reference: templateItem.id }
-
-  await addIndex(page.content, index, reference)
-  await page.markModified('content')
-  await createItem(page)
-}
-
-async function createTemplate (type, docID) {
-  const templateID = await getTemplateID(type)
-  const _templateObject = await getObject(nodeSpec, templateID)
-  const typeObject = new Types({
-    doc: docID,
-    type,
-    components: parseContent(_templateObject.content),
-    references: []
-  })
-  const item = await createItem(typeObject)
-  return item
-}
-async function newContent (state, type, index, isTemplate) {
-  // Get Data First don't construct an object that isn't real
-  const docID = updateKey.get(state).spec.docID
-  const page = await getObject(Page, docID)
-  if (!isTemplate) {
-    const _component = { component: type }
-    addIndex(page.content, index, _component)
-    page.markModified('content')
-    return await page.save()
-  }
-
-  const templateItem = await createTemplate(node.type.name)
-  const reference = { component: 'reference', reference: itemID }
-
-  // update Doc Content
-
-  await addIndex(page.content, index, reference)
-  await page.markModified('content')
-  await createItem(page)
-  return item
-}
-
-function getField (element, path) {
-  let result = element
-  const _list = path.split('.')
-  _list.forEach(field => {
-    result = result[field]
-  })
-  return result
-}
-
 // Index and Sort
-function mirrorSort (ref, target, path) {
-  const array = []
-  target.forEach(elem => {
-    const field = getField(elem, path)
-    const index = ref.indexOf(field)
-    array[index] = elem
-  })
-  return array
-}
-function getAtIndex (array, index) {
-  if (!Array.isArray(array)) throw new TypeError('Object is not an Array')
-  if (index > array.length - 1) throw new RangeError('Index is out of Range')
-  return array[index]
-}
 function removeIndex (array, index) {
   if (index > -1 && index < array.length) {
     array.splice(index, 1)
   }
   return array
 }
-function removeItem (array, item) {
-  const loc = array.indexOf(item)
-  if (loc > -1) {
-    array.splice(loc, 1)
-  }
+function swapIndex (from, _to, array) {
+  const end = array[_to] === undefined ? array.length - 1 : _to;
+  [array[from], array[end]] = [array[end], array[from]]
   return array
 }
+function updateByIndex (id, data, content, page) {
+  const node = data[id].node
+  const index = data[id].index
+  let contentID = content[index] === undefined ? false : content[index].id
+  const matchingIndex = contentID === false ? false : data[contentID].index
 
-async function templateStuff (node, page, component, objID, index) {
-  // Create Template and set ID
-  const template = await createTemplate(node.type.name, page.id)
-  component.reference = template.id
-  component._id = objID
+  if (data[id].newNode === false) {
+    do { swapIndex(index, matchingIndex, content); contentID = content[index].id } while (contentID !== id)
+    if (content[index].component === 'reference') { updateTemplate(data[id], content[index]) } else { content[index].data = node }
+  } else {
+    // create new Node
+    const _isTemplate = isTemplate(node)
+    const component = _isTemplate ? { component: 'reference' } : { component: node.type.name }
 
-  // Add Index
-  addIndex(page.content, index, component)
+    // generate Template
+    if (_isTemplate) {
+      const objectID = new mongoose.Types.ObjectId().toString()
+      createTemplateInstance(node, page, component, objectID, index)
+      return objectID
+    }
 
-  // Save Changes
-  page.markModified('content')
-  page.save()
+    // generate Component
+    else {
+      addIndex(content, index, component)
+    }
+
+  }
+  return content[index].id
 }
 function addIndex (array, index, value) {
   // Add End
@@ -513,6 +322,31 @@ function addIndex (array, index, value) {
 }
 
 // Create Methods
+async function createTemplateInstance (node, page, component, objID, index) {
+  // Create Template and set ID
+  const template = await createTemplate(node.type.name, page.id)
+  component.reference = template.id
+  component._id = objID
+
+  // Add Index
+  addIndex(page.content, index, component)
+
+  // Save Changes
+  page.markModified('content')
+  page.save()
+}
+async function createTemplate (type, docID) {
+  const templateID = await getTemplateID(type)
+  const _templateObject = await getDBObject(nodeSpec, templateID)
+  const typeObject = new Types({
+    doc: docID,
+    type,
+    components: parseContent(_templateObject.content),
+    references: []
+  })
+  const item = await createItem(typeObject)
+  return item
+}
 function constructDOM (content) {
   const _content = []
   content.forEach(obj => {
@@ -543,10 +377,6 @@ function createType (name, content) {
     functionValue: [name, 0]
   })
   return type
-}
-async function populateField (item, field, ...args) {
-  const promise = await item.populate(field, ...args).exec()
-  return promise
 }
 async function createPage () {
   const data = new Page({ title: '', content: [], references: [] })
@@ -591,14 +421,6 @@ function parseContent (content) {
   return result
 }
 
-// Test Methods
-async function generateType () {
-  const Type = await createType('newblock2', 'heading note')
-  createItem(Type)
-  console.log('Generated Type')
-}
-
-// eslin-disable-next-line no-unused-vars
 module.exports = {
   newPage,
   createType,
