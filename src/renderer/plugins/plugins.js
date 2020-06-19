@@ -96,7 +96,7 @@ const placeholder = new Plugin({
 
           // Add classes to Decoration Object
           const decoration = Decoration.node(childPos, childPos + child.nodeSize, {
-            class:'isEmpty'
+            class: 'isEmpty'
 
           })
 

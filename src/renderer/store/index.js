@@ -1,3 +1,3 @@
 export const state = () => ({
-  counter:0
+  counter: 0
 })

@@ -6,10 +6,10 @@
         <el-input id="placeholder" v-model="placeholder" placeholder="Placeholder Text" />
       </el-collapse-item>
       <el-collapse-item title="HIGHLIGHT COLOR">
-        <el-color-picker  color-format="rgb" id="highlight" v-model="highlight" @active-change="sethighlight" />
+        <el-color-picker id="highlight" v-model="highlight" color-format="rgb" @active-change="sethighlight" />
       </el-collapse-item>
       <el-collapse-item title="TEXT COLOR">
-        <el-color-picker  color-format="rgb"  id="color" v-model="color" @active-change="setcolor" />
+        <el-color-picker id="color" v-model="color" color-format="rgb" @active-change="setcolor" />
       </el-collapse-item>
       <el-collapse-item title="TEXT SIZE">
         <el-select v-model="size" placeholder="Select Size">
@@ -80,6 +80,5 @@ export default {
 </script>
 
 <style scoped>
-
 
 </style>

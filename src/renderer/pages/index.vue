@@ -1,10 +1,9 @@
 <template>
   <el-container>
-    <el-header class ='cover'>
-      <img class='cover' style = 'width:inherit' src="../assets/cabin.jpg"/>
-
+    <el-header class="cover">
+      <img class="cover" style="width:inherit" src="../assets/cabin.jpg">
     </el-header>
-    <el-main></el-main>
+    <el-main />
   </el-container>
 </template>
 

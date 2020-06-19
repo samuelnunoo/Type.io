@@ -1,14 +1,13 @@
 <template>
-      <el-collapse-item  >
-        <slot/>
-      </el-collapse-item>
-
+  <el-collapse-item>
+    <slot />
+  </el-collapse-item>
 </template>
 
 <script>
-    export default {
-        name: "config_collapse"
-    }
+export default {
+  name: 'ConfigCollapse'
+}
 </script>
 
 <style scoped>

@@ -6,16 +6,16 @@
       </draggable>
     </el-aside>
     <el-main>
-      <el-input v-model="name" placeholder="idk"></el-input>
-      <el-button @click="createTemplate"></el-button>
+      <el-input v-model="name" placeholder="idk" />
+      <el-button @click="createTemplate" />
       <div id="grid" class="container">
-        <draggable id="typeContainer" class="workspace" tag="div" :list="gridElements" group="components" >
+        <draggable id="typeContainer" class="workspace" tag="div" :list="gridElements" group="components">
           <component :is="component.name" v-for="component in gridElements" :id="component.id" :name="component.name" />
         </draggable>
       </div>
     </el-main>
-    <el-aside class="column" >
-      <component class='config' :is="current" />
+    <el-aside class="column">
+      <component :is="current" class="config" />
     </el-aside>
   </el-container>
 </template>

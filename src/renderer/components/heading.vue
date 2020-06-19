@@ -33,7 +33,6 @@ export default {
     this.$store.commit('typeController/createData', { id: this.id, name: this.$attrs.name })
   }
 
-
 }
 </script>
 

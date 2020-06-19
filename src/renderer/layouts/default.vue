@@ -1,16 +1,15 @@
 <template>
   <div>
     <el-header class="header">
-      <el-button class="toggle"  icon="fas fa-bars" @click="toggle" />
+      <el-button class="toggle" icon="fas fa-bars" @click="toggle" />
     </el-header>
 
     <el-container>
       <el-aside v-show="active" class="menu">
-        <el-menu :router=true >
+        <el-menu :router="true">
           <el-menu-item index="/">Home </el-menu-item>
           <el-menu-item index="editor"> Editor</el-menu-item>
           <el-menu-item index="type"> Type Creator</el-menu-item>
-
         </el-menu>
       </el-aside>
       <nuxt />
