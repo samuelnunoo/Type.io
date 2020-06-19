@@ -1,4 +1,6 @@
 // Imports
+
+const insertPoint = require('prosemirror-transform').insertPoint
 const { exampleSetup } = require('prosemirror-example-setup')
 const state = require('prosemirror-state')
 const Plugin = state.Plugin
@@ -53,9 +55,11 @@ async function newNote (state, dispatch) {
   const start = node.offset
   const end = start + node.node.nodeSize
   const block = await getNode(state)
-
-  tr.insert(end, block)
-  dispatch(tr)
+  const insert = insertPoint(state.doc, end, block.type)
+  if (insert !== null) {
+    tr.insert(insert, block)
+    dispatch(tr)
+  }
 }
 
 // Plugins

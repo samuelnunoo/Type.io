@@ -173,6 +173,54 @@ async function getTypes (content) {
 }
 
 // Update Functions
+function updatePageContent (id, data, content, page) {
+  const node = data[id].node
+  const index = data[id].index
+
+  if (data[id].newNode === false) {
+    let contentID = content[index] === undefined ? false : content[index].id
+    const matchingIndex = contentID === false ? false : data[contentID].index
+    do { swapIndex(index, matchingIndex, content); contentID = content[index].id } while (contentID !== id)
+    if (content[index].component === 'reference') { updateTemplate(data[id], content[index]) } else { content[index].data = node }
+  } else {
+    // create new Node
+    const _isTemplate = isTemplate(node)
+    const component = _isTemplate ? { component: 'reference' } : { component: node.type.name }
+
+    // generate Template
+    if (_isTemplate) {
+      const objectID = new mongoose.Types.ObjectId().toString()
+      createTemplateInstance(node, page, component, objectID, index)
+      return objectID
+    }
+
+    // generate Component
+    else {
+      addIndex(content, index, component)
+    }
+  }
+  return content[index].id
+}
+let debounce = false
+async function createTemplateInstance (node, page, component, objID, index) {
+  // Create Template and set ID
+  const template = await createTemplate(node.type.name, page.id)
+  component.reference = template.id
+  component._id = objID
+
+  // Add Index
+  addIndex(page.content, index, component)
+
+  // Save Changes
+  if (debounce === false) {
+    page.markModified('content')
+    page.save(function (err) {
+      if (err) console.error(err)
+      debounce = false
+    })
+  }
+  debounce = true
+}
 function syncDB (page, tr, data, deletions) {
   const content = removeFromDB(page, deletions)
 
@@ -180,13 +228,19 @@ function syncDB (page, tr, data, deletions) {
     if (page[id] !== undefined) {
       page[id] = data[id].node.textContent
     } else {
-      const getID = updateByIndex(id, data, content, page)
-      tr.setNodeMarkup(data[id].pos, null, { id: getID })
+      const getID = updatePageContent(id, data, content, page)
+      if (data[id].newNode) { tr.setNodeMarkup(data[id].pos, null, { id: getID }) }
     }
   }
+  if (debounce === false) {
+    page.markModified('content')
+    page.save(function (err) {
+      if (err) console.error(err)
+      debounce = false
+    })
+  }
+  debounce = true
 
-  page.markModified('content')
-  page.save()
   return tr
 }
 async function newPage (editor, plugins, objectID = null) {
@@ -230,7 +284,6 @@ async function newPage (editor, plugins, objectID = null) {
           })
         })
         syncDB(PageModel, newTr, Content, Deletions)
-        console.log(newTr)
         return newTr
       }
     }
@@ -250,13 +303,12 @@ function removeFromDB (page, deletions) {
   })
   return page.content
 }
-async function updateTemplate (content, pointer){
+async function updateTemplate (content, pointer) {
   const _id = pointer.reference
   const instance = await Types.findOne({ _id }).exec()
   instance.data = content.node
   instance.markModified('components')
   instance.save()
-  console.log(content)
 }
 function isTemplate (node) {
   const type = node.type.name
@@ -279,62 +331,14 @@ function swapIndex (from, _to, array) {
   [array[from], array[end]] = [array[end], array[from]]
   return array
 }
-function updateByIndex (id, data, content, page) {
-  const node = data[id].node
-  const index = data[id].index
-  let contentID = content[index] === undefined ? false : content[index].id
-  const matchingIndex = contentID === false ? false : data[contentID].index
 
-  if (data[id].newNode === false) {
-    do { swapIndex(index, matchingIndex, content); contentID = content[index].id } while (contentID !== id)
-    if (content[index].component === 'reference') { updateTemplate(data[id], content[index]) } else { content[index].data = node }
-  } else {
-    // create new Node
-    const _isTemplate = isTemplate(node)
-    const component = _isTemplate ? { component: 'reference' } : { component: node.type.name }
-
-    // generate Template
-    if (_isTemplate) {
-      const objectID = new mongoose.Types.ObjectId().toString()
-      createTemplateInstance(node, page, component, objectID, index)
-      return objectID
-    }
-
-    // generate Component
-    else {
-      addIndex(content, index, component)
-    }
-
-  }
-  return content[index].id
-}
 function addIndex (array, index, value) {
-  // Add End
-  if (index >= array.length - 1) array.push(value)
-
-  // Add Beginning
-  else if (index === 0) array.unshift(value)
-
-  // Add Between
-  else array.splice(index, 0, value)
-
+  array.splice(index, 0, value)
   return array
 }
 
 // Create Methods
-async function createTemplateInstance (node, page, component, objID, index) {
-  // Create Template and set ID
-  const template = await createTemplate(node.type.name, page.id)
-  component.reference = template.id
-  component._id = objID
 
-  // Add Index
-  addIndex(page.content, index, component)
-
-  // Save Changes
-  page.markModified('content')
-  page.save()
-}
 async function createTemplate (type, docID) {
   const templateID = await getTemplateID(type)
   const _templateObject = await getDBObject(nodeSpec, templateID)
