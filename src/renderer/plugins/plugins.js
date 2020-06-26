@@ -1,5 +1,7 @@
 // Imports
+new NodeView({})
 
+const NodeSelection = require('prosemirror-state').NodeSelection
 const insertPoint = require('prosemirror-transform').insertPoint
 const { exampleSetup } = require('prosemirror-example-setup')
 const state = require('prosemirror-state')
@@ -16,6 +18,7 @@ async function getNode (state) {
   const node = schema.nodeFromJSON(block.template)
   return node
 }
+
 function nextNode (state, dispatch) {
   const doc = state.doc
   const endPos = state.selection.$anchor.end()
@@ -129,3 +132,4 @@ function Plugins (schema) {
 
 // Exports
 module.exports = Plugins
+

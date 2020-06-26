@@ -1,17 +1,12 @@
-// Imports
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-
-// Component and Validation
 const componentSchema = new Schema({}, { discriminatorKey: 'component', _id: false })
 function validation (obj, key) {
   const result = Object.prototype.hasOwnProperty.call(obj, key.toString())
   return result
 }
 
-
-// Main Schema
 const NodeInstance = new Schema({
   doc: { type: Schema.Types.ObjectID, ref: 'Pages' },
   type: String,
@@ -19,7 +14,6 @@ const NodeInstance = new Schema({
   references: [{ type: Schema.Types.ObjectID, ref: 'Pages' }]
 })
 
-// Data Setter
 NodeInstance.virtual('data')
   .set(function (data) {
     const content = data.content.content
@@ -28,7 +22,7 @@ NodeInstance.virtual('data')
       components[i].data = content[i]
     }
   })
-// Testing
+
 NodeInstance.statics.destroy = async function (_id) {
   const Type = await mongoose.model('Types').findOne({ _id }).exec()
   const _list = Type.references
@@ -51,10 +45,8 @@ NodeInstance.statics.destroy = async function (_id) {
   mongoose.model('Types').deleteOne({ _id }).exec()
 }
 
-// Array Path
 const docArray = NodeInstance.path('components')
 
-// Heading
 const heading = new Schema({
   heading: {
     type: String
@@ -71,7 +63,6 @@ heading.virtual('data')
     this.set({ heading })
   })
 
-// RichText
 const note = new Schema({
   note: {
     type: String
@@ -100,9 +91,7 @@ note.virtual('data')
     } else this.set({ note: '' })
   })
 
-// Register Components
 docArray.discriminator('heading', heading)
 docArray.discriminator('note', note)
 
-// Export
 module.exports = mongoose.model('NodeInstance', NodeInstance)

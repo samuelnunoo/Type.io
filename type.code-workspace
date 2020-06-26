@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+    "mocha.logVerbose": true,
+	},
+	"mocha.coverage": null
+}

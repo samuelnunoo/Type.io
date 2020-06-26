@@ -37,6 +37,7 @@ const webpackConfig = Webpack.getBaseConfig({
     filename: 'index.js',
     path: path.join(DIST_DIR, 'main')
   },
+  devtool:"source-map",
   plugins: [
     new webpack.DefinePlugin({
       INCLUDE_RESOURCES_PATH: resourcesPath.mainProcess(),

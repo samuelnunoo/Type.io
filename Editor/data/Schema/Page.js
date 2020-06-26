@@ -1,25 +1,19 @@
-// Imports
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
-
-// Component Schema
 const componentSchema = new Schema({}, { discriminatorKey: 'component'})
 
-// Main Schema
 const Page = new Schema({
   title: String,
   content: [componentSchema],
   references: [{ type: Schema.Types.ObjectID, ref: 'Types' }]
 })
 
-// Content
 const content = Page.path('content')
 function validation (obj, key) {
   const result = Object.prototype.hasOwnProperty.call(obj, key.toString())
   return result
 }
 
-// Paragraph
 const paragraph = new Schema({ text: { type: String } })
 paragraph.virtual('data')
   .get(function () {
@@ -31,12 +25,11 @@ paragraph.virtual('data')
     this.set({ text })
   })
 
-// Heading
 const heading = new Schema({
   heading: {
     type: String
   }
-})
+}  )
 heading.virtual('data')
   .get(function () {
     const value = validation(this._doc, 'heading') ? this.heading : ''
@@ -48,8 +41,8 @@ heading.virtual('data')
     this.set({ heading })
   })
 
-// Template
-const reference = new Schema({ reference: { type: Schema.Types.ObjectID, ref: 'Types' } })
+const reference = new Schema(
+  { reference: { type: Schema.Types.ObjectID, ref: 'Types' } })
 reference.virtual('data')
   .get(function () {
     // Get Obj
@@ -62,10 +55,8 @@ reference.virtual('data')
     this.set({ reference })
   })
 
-// Register Components
 content.discriminator('heading', heading)
 content.discriminator('paragraph', paragraph)
 content.discriminator('reference', reference)
 
-// Export
 module.exports = mongoose.model('Pages', Page)

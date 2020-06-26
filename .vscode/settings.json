@@ -1,0 +1,4 @@
+{
+    "mochaExplorer.mochaPath": "node_modules/electron-mocha",
+    "mochaExplorer.debuggerConfig": ""
+}

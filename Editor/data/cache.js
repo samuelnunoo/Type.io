@@ -15,10 +15,18 @@ class Cache {
     })
   }
 
+  async storage (_id, Schema) {
+    const value = this.cache.get(_id)
+    if (value) return await value
+
+    const model = await Schema.findOne({ _id }).exec()
+    this.cache.set(_id, model)
+    return model
+  }
+
   del (key) {
     this.cache.del(key)
   }
-
   flush () {
     this.cache.flushAll()
   }

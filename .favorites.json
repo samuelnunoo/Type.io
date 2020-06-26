@@ -1,0 +1,28 @@
+[
+    {
+        "type": "Group",
+        "name": "Tests",
+        "parent_id": null,
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "1AXYqSdReZJrmkgM"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\Samuel\\WebstormProjects\\New Project\\Type.io\\test\\example.js",
+        "parent_id": null,
+        "fsPath": "c:\\Users\\Samuel\\WebstormProjects\\New Project\\Type.io\\test\\example.js",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "AljguxGDsaQoVRPw"
+    },
+    {
+        "type": "File",
+        "name": "c:\\Users\\Samuel\\WebstormProjects\\New Project\\Type.io\\package.json",
+        "parent_id": null,
+        "fsPath": "c:\\Users\\Samuel\\WebstormProjects\\New Project\\Type.io\\package.json",
+        "workspaceRoot": null,
+        "workspacePath": null,
+        "id": "euqgBHNO2LjC5xca"
+    }
+]

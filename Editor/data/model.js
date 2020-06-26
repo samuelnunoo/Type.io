@@ -91,7 +91,8 @@ function schemaJSON (nodes, content) {
         toDOM (node) {
           return ['p', node.attrs, 0]
         },
-        parseDOM: [{ tag: 'p' }]
+        parseDOM: [{ tag: 'p' }],
+        selectable:false
       },
       heading: {
         attrs: {
@@ -113,7 +114,9 @@ function schemaJSON (nodes, content) {
         toDOM (node) {
           return ['h1', node.attrs, ['span', 0]]
         },
-        parseDOM: [{ tag: 'h1' }]
+        parseDOM: [{ tag: 'h1' }],
+        selectable:false,
+        draggable: false,
       },
       title: {
         content: 'text*',
@@ -290,8 +293,8 @@ async function newPage (editor, plugins, objectID = null) {
 
   })
   const Plugins = [updatePlugin, ...plugins(schema)]
-  const State = getEditorState(schema, Plugins, pageData)
-  return newEditor(editor, State)
+  const props = getEditorState(schema, Plugins, pageData)
+  return newEditor(editor, props)
 }
 function removeFromDB (page, deletions) {
   let removalCount = 0
@@ -304,11 +307,12 @@ function removeFromDB (page, deletions) {
   return page.content
 }
 async function updateTemplate (content, pointer) {
-  const _id = pointer.reference
+  const _id = pointer.reference.toString()
   const instance = await Types.findOne({ _id }).exec()
+
   instance.data = content.node
   instance.markModified('components')
-  instance.save()
+  await instance.save()
 }
 function isTemplate (node) {
   const type = node.type.name
@@ -395,10 +399,12 @@ function formatNode (data) {
     json[item.name] = {}
     json[item.name].content = item.content
     json[item.name].toDOM = function (node) {
-      return item.functionValue
+      return [item.functionValue[0],node.attrs,0]
     }
     json[item.name].parseDOM = [{ tag: item.name }]
     json[item.name].attrs = item.attrs
+    json[item.name].draggable = true
+
   })
   return json
 }

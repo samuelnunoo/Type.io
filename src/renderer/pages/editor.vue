@@ -27,6 +27,16 @@ export default {
     --highlight: none;
     --size: 100%;
   }
+
+  .testing{
+    margin:auto;
+    background-color:white;
+    display:block;
+    padding:40px;
+    height: auto;
+    width: 50%;
+    box-shadow: 0px 0px 3px black;
+  }
   #title{
     padding: 100px 0px 100px 0px;
     font-size: 300%;
