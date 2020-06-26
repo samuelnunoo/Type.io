@@ -15,7 +15,7 @@
       <nuxt />
     </el-container>
   </div>
-  </el-container>
+
 </template>
 <script>
 export default {

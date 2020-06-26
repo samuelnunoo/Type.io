@@ -7,7 +7,7 @@
     "dev": "node .electron-nuxt/dev.js",
     "build": "node .electron-nuxt/build.js",
     "test": "mocha",
-    "test:vue":"mochapack --webpack-config test/vue/webpack.config.js --require test/vue/setup.js test/vue/*.test.js",
+    "test:vue": "mochapack --webpack-config test/vue/webpack.config.js --require test/vue/setup.js test/vue/*.test.js",
     "test:pm": "moduleserve test"
   },
   "keywords": [],
@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@types/mocha": "^7.0.2",
+    "@vue/compiler-sfc": "^3.0.0-beta.15",
     "browserify": "^16.5.1",
     "chai": "^4.2.0",
     "electron-chromedriver": "^9.0.0",
@@ -85,6 +86,8 @@
     "prosemirror-test-builder": "^1.0.3",
     "prosemirror-view": "^1.14.11",
     "react": "^16.13.1",
+    "vue-loader": "^16.0.0-beta.4",
+    "vue-template-compiler": "^2.6.11",
     "vuedraggable": "^2.23.2"
   }
 }
