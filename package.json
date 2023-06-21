@@ -48,7 +48,7 @@
     "eslint-loader": "3.0.4",
     "native-ext-loader": "2.3.0",
     "node-sass": "4.14.1",
-    "nuxt": "2.12.2",
+    "nuxt": "3.4.3",
     "require-extension-hooks": "0.3.3",
     "require-extension-hooks-babel": "1.0.0",
     "require-extension-hooks-vue": "0.4.2",
